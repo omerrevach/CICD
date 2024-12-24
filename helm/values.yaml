@@ -1,0 +1,10 @@
+replicaCount: 1
+
+image:
+  repository: rebachi/bank-leumi
+  pullPolicy: Always
+  tag: latest
+
+service:
+    type: ClusterIP
+    port: 80
