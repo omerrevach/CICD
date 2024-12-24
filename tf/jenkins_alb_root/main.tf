@@ -37,17 +37,31 @@ module "route" {
   name                              = var.name
 }
 
-module "jenkins" {
-  source = "../modules/compute/ec2"
-  vpc_id       = module.vpc.vpc_id
-  subnet_id    = module.subnets.private_subnets[0]
-  alb_security_group_id = module.alb.alb_security_group_id
+module "ec2" {
+  source                  = "../modules/compute/ec2"
+  vpc_id                  = module.vpc.vpc_id
+  subnet_id               = module.subnets.private_subnets[0]
+  instance_type           = "t3.small"
+  ami                     = "ami-06d84abc599644ee1"
+  security_group_name     = "jenkins-sg"
+  ingress_from_port       = 8080
+  ingress_to_port         = 8080
+  ingress_protocol        = "tcp"
+  ingress_cidr_blocks     = ["0.0.0.0/0"]
+  instance_name           = "jenkins-master"
 }
 
 module "alb" {
-  source            = "../modules/compute/alb"
-  vpc_id = module.vpc.vpc_id
-  public_subnet_ids = module.subnets.public_subnets
-  jenkins_instance_id = module.jenkins.instance_id
-  name              = var.name
+  source               = "../modules/compute/alb"
+  vpc_id               = module.vpc.vpc_id
+  public_subnet_ids    = module.subnets.public_subnets
+  instance_id          = module.ec2.instance_id
+  name                 = var.name
+  load_balancer_type   = "application"
+  ingress_from_port    = 8080
+  ingress_to_port      = 8080
+  target_group_port    = 8080
+  health_check_port    = 8080
+  protocol             = "HTTP"
+  listener_port        = 8080
 }

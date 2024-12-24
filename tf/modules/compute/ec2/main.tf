@@ -1,11 +1,11 @@
-resource "aws_security_group" "jenkins" {
+resource "aws_security_group" "instance_sg" {
   vpc_id = var.vpc_id
 
   ingress {
-    from_port       = 8080
-    to_port         = 8080
-    protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
+    from_port   = var.ingress_from_port
+    to_port     = var.ingress_to_port
+    protocol    = var.ingress_protocol
+    cidr_blocks = var.ingress_cidr_blocks
   }
 
   egress {
@@ -16,17 +16,27 @@ resource "aws_security_group" "jenkins" {
   }
 
   tags = {
-    Name = "jenkins-sg"
+    Name = var.security_group_name
   }
 }
 
-resource "aws_instance" "jenkins" {
-  instance_type = "t3.micro"
-  ami = "ami-0ed2f9fb6f6e1bde6"
-  subnet_id = var.subnet_id
-  vpc_security_group_ids = [aws_security_group.jenkins.id]
+resource "aws_instance" "instance" {
+  instance_type          = var.instance_type
+  ami                    = var.ami
+  subnet_id              = var.subnet_id
+  vpc_security_group_ids = [aws_security_group.instance_sg.id]
 
   tags = {
-    Name = "jenkins-master"
+    Name = var.instance_name
   }
+}
+
+resource "aws_eip" "eip" {
+  domain = "vpc"
+  depends_on = [aws_instance.instance]
+}
+
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.instance.id
+  allocation_id = aws_eip.eip.id
 }

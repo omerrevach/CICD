@@ -1,26 +1,61 @@
 pipeline { 
     agent {
         label 'agent1'
-        image
+        image "rebachi/bank-leumi:agent"
+        alwaysPull true
     } 
-    options {
-        skipStagesAfterUnstable()
+
+    enviorment {
+        registry = "rebachi/bank-leumi"
+        registryCredential = 'DOCKER_CREDENTIALS'
     }
+
     stages {
-        stage('Build') { 
+        stage('Checkout scm') { 
             steps { 
-                sh 'make' 
+                checkout scm
             }
         }
-        stage('Test'){
-            steps {
-                sh 'make check'
-                junit 'reports/**/*.xml' 
+        stage('Parallel Stages For Static Analysis Tests'){
+            parallel {
+                stage("Pylint") {
+                    steps {
+                        sh 'pylint --output-format=parseable --fail-under=5 ./app/app.py'
+                    }
+                }
+
+                stage("Bandit Scan") {
+                    steps {
+                        sh 'bandit -r ./app'
+                    }
+                }
             }
         }
-        stage('Deploy') {
+
+        stage("Docker Build") {
             steps {
-                sh 'make publish' //
+                script {
+                    app = docker.build("${registry}:${env.BUILD_NUMBER}", "./app")
+                }
+            }
+        }
+
+        stage("Docker Push") {
+            steps {
+                script {
+                    docker.withRegistry('', registryCredential) {
+                        app.push("${env.BUILD_NUMBER}")
+                    }
+                }
+            }
+        }
+
+        stage("Trigger CD JOb") {
+            steps {
+                build job: 'CD',
+                    parameters: [
+                        string(name: 'DOCKER_IMAGE', value: app.imageName())
+                    ]
             }
         }
     }
