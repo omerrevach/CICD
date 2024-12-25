@@ -25,18 +25,21 @@ resource "aws_instance" "instance" {
   ami                    = var.ami
   subnet_id              = var.subnet_id
   vpc_security_group_ids = [aws_security_group.instance_sg.id]
+  key_name               = "omer_key"
+  iam_instance_profile   = "jenkins"
 
   tags = {
     Name = var.instance_name
   }
 }
 
-resource "aws_eip" "eip" {
-  domain = "vpc"
-  depends_on = [aws_instance.instance]
-}
+# Uncomment if Elastic IP is required
+# resource "aws_eip" "eip" {
+#   domain = "vpc"
+#   depends_on = [aws_instance.instance]
+# }
 
-resource "aws_eip_association" "eip_assoc" {
-  instance_id   = aws_instance.instance.id
-  allocation_id = aws_eip.eip.id
-}
+# resource "aws_eip_association" "eip_assoc" {
+#   instance_id   = aws_instance.instance.id
+#   allocation_id = aws_eip.eip.id
+# }

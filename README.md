@@ -1,14 +1,20 @@
 # Terraform Setup for Jenkins
 
-## Overview
+## **Project Title**
 
-Using Terraform, I set up Jenkins on an EC2 instance in a **private subnet** and connected it to an **Application Load Balancer (ALB)** for secure access.
+CI/CD Project Bank Leumi
+
+## **Introduction**
+
+This project sets up with terraform the jenkins controller in a private subnet connected to an ALB for the ui.
+Another terraform for the eks sets up the eks cluster.
+in the cluster i have a script that sets up argocd and an alb ingress controller and connectes them together for use and i have a dns in route53 that lets me connect to argocd and to the pods in browser through https with cname for each
 
 ## Features
 
 - **Jenkins**: Deployed as an EC2 instance in a private subnet for security.
 - **ALB**: Provides access to Jenkins from outside the private subnet.
-- **Terraform Modules**: Modularized infrastructure as code for easy management and scaling.
+- **Terraform Modules**: Modularized infrastructure as code for easy management and scaling and dynamic options with ec2 and nlb/alb.
 
 ## Deployment Steps
 
