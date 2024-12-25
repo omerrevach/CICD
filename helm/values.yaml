@@ -1,4 +1,4 @@
-replicaCount: 2
+replicaCount: 1
 
 image:
   repository: rebachi/bank-leumi
@@ -7,19 +7,23 @@ image:
 
 service:
   type: ClusterIP
-  port: 80
+  port: 443
+  targetPort: 5000
 
 ingress:
-  enabled: true
-  annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-north-1::certificate/3f05f383-36e1-4b11-8520-c51a378d9631"
-    external-dns.alpha.kubernetes.io/hostname: "stockpnl.com"
-  hosts:
-    - host: stockpnl.com
-      paths:
-        - path: /
-          pathType: Prefix
+  app:
+    enabled: true
+    hosts:
+      - stockpnl.com
+    tls:
+      - secretName: app-tls-secret
+        hosts:
+          - stockpnl.com
+  argocd:
+    enabled: true
+    hosts:
+      - argocd.stockpnl.com
+    tls:
+      - secretName: argocd-tls-secret
+        hosts:
+          - argocd.stockpnl.com
