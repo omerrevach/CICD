@@ -1,13 +1,15 @@
 pipeline { 
     agent {
-        label 'slave'
-        image "rebachi/bank-leumi:agent"
-        alwaysPull true
+        docker {
+            label 'slave'
+            image "rebachi/bank-leumi:agent"
+            alwaysPull true
+        }
     } 
 
     enviorment {
         registry = "rebachi/bank-leumi"
-        registryCredential = 'DOCKER_CREDENTIALS'
+        registryCredential = 'docker-hub-id-new'
     }
 
     stages {
