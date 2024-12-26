@@ -10,7 +10,7 @@ This project implements a comprehensive Infrastructure as Code (IaC) solution us
 
 - Custom AMI with pre-configured Jenkins controller and dynamic node agent
 - Deployed in a private subnet for enhanced security
-- Connected to an Application Load Balancer (ALB) for traffic distribution
+- Connected to an ALB 
 - Easily adaptable to new VPCs by changing the subnet ID
 
 ### 2. EKS Cluster
@@ -18,15 +18,13 @@ This project implements a comprehensive Infrastructure as Code (IaC) solution us
 - Kubernetes cluster set up using Terraform
 - Ingress Nginx Controller for managing incoming traffic
 - ArgoCD integration for GitOps-based deployments
-- Accessible via HTTPS:
-  - ArgoCD: https://argocd.stockpnl.com
-  - Main Application: https://stockpnl.com
+- Accessible via HTTPS
 
 ### 3. EC2 Instance with Network Load Balancer
 
 - EC2 instance with restricted inbound traffic (only from IP 91.231.246.50)
-- Assigned an Elastic Public IP
-- Connected to a Network Load Balancer for traffic distribution
+- Assigned an Elastic IP
+- Connected to a NLB
 
 ## Infrastructure Design
 
@@ -41,40 +39,29 @@ This project implements a comprehensive Infrastructure as Code (IaC) solution us
 - HTTPS implementation with valid SSL certificates
 - EKS cluster with proper IAM roles and policies
 
-## Deployment and Access
-
-- Jenkins accessible through ALB
-- ArgoCD and main application accessible via custom domains with HTTPS
-- EC2 instance accessible only from specified IP
-
 # Infrastructure Deployment Guide
 
 ## Getting Started
 
 ### 1. Clone the Repository
 
-Clone the project repository:
+Clone the project repository only last commit:
 
-git clone https://github.com/omerrevach/bank-leumi.git
+```
+git clone --depth 1 https://github.com/omerrevach/bank-leumi.git
 cd bank-leumi
-
-text
+```
 
 ### 2. Set Up Jenkins with ALB
 
-Navigate to the Jenkins ALB configuration directory:
-
-cd tf/jenkins_alb_root
-
-text
+Navigate to tf/jenkins_alb_root
 
 Initialize and apply Terraform configuration:
-
+```
 terraform init
 terraform plan
 terraform apply
-
-text
+```
 
 #### Jenkins Post-Configuration
 
@@ -94,32 +81,22 @@ text
 
 ### 3. Set Up EKS Cluster
 
-Navigate to EKS setup directory:
-
-cd ../../tf/eks_setup_root
-
-text
+Navigate to tf/eks_setup_root:
 
 Initialize and apply Terraform configuration:
-
+```
 terraform init
 terraform plan
 terraform apply
-
-text
+```
 
 ### 4. Deploy Nginx Ingress and ArgoCD
 
-Deploy Nginx Ingress Controller and ArgoCD:
+go to the helm directory
 
-cd ../../helm
+````
 ./setup-alb-argocd.sh
-
-text
-
-#### Access Points
-- ArgoCD: https://argocd.stockpnl.com
-- Application: https://stockpnl.com
+```
 
 ### 5. EC2 with Network Load Balancer
 
