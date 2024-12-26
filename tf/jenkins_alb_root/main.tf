@@ -1,46 +1,24 @@
-module "vpc" {
-  source      = "../modules/networking/vpc"
-  cidr_block  = "10.0.0.0/16"
-  name        = var.name
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-vpc"
+    key            = "jenkins/terraform.tfstate"
+    region         = "eu-north-1"
+  }
 }
 
-module "igw" {
-  source = "../modules/networking/igw"
-  vpc_id = module.vpc.vpc_id
-  name   = var.name
-}
-
-module "subnets" {
-  source        = "../modules/networking/subnets"
-  vpc_id        = module.vpc.vpc_id
-  public_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
-  name          = var.name
-}
-
-module "nat" {
-  source              = "../modules/networking/nat"
-  vpc_id              = module.vpc.vpc_id
-  instance_type       = "t3.micro"
-  public_subnet_id    = module.subnets.public_subnets[0]
-  private_cidr_blocks = module.subnets.private_cidr_blocks
-  name                = var.name
-}
-
-module "route" {
-  source                            = "../modules/networking/route_tables"
-  vpc_id                            = module.vpc.vpc_id
-  igw_id                            = module.igw.igw_id
-  nat_instance_network_interface_id = module.nat.nat_instance_network_interface_id
-  public_subnet_ids                  = module.subnets.public_subnets
-  private_subnet_ids                 = module.subnets.private_subnets
-  name                              = var.name
+data "terraform_remote_state" "vpc" {
+  backend = "s3"
+  config = {
+    bucket = "my-terraform-state-vpc"
+    key    = "vpc/terraform.tfstate"
+    region = "eu-north-1"
+  }
 }
 
 module "ec2" {
   source                  = "../modules/compute/ec2"
-  vpc_id                  = module.vpc.vpc_id
-  subnet_id               = module.subnets.private_subnets[0]
+  vpc_id                  = data.terraform_remote_state.vpc.outputs.vpc_id
+  subnet_id               = data.terraform_remote_state.vpc.outputs.private_subnets[0]
   instance_type           = "t3.small"
   ami                     = "ami-05a860b39d42d1bb5"
   security_group_name     = "jenkins-sg"
@@ -53,8 +31,8 @@ module "ec2" {
 
 module "alb" {
   source               = "../modules/compute/alb"
-  vpc_id               = module.vpc.vpc_id
-  public_subnet_ids    = module.subnets.public_subnets
+  vpc_id               = data.terraform_remote_state.vpc.outputs.vpc_id
+  public_subnet_ids    = data.terraform_remote_state.vpc.outputs.public_subnets
   instance_id          = module.ec2.instance_id
   name                 = var.name
   load_balancer_type   = "application"
@@ -64,4 +42,32 @@ module "alb" {
   health_check_port    = 8080
   protocol             = "HTTP"
   listener_port        = 8080
+}
+
+resource "aws_security_group" "jenkins_sg" {
+  name        = var.security_group_name
+  description = "Dynamic security group for Jenkins master"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+
+  dynamic "ingress" {
+    for_each = var.ingress_rules
+    content {
+      description = ingress.value.description
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      cidr_blocks = ingress.value.cidr_blocks
+    }
+  }
+
+  dynamic "egress" {
+    for_each = var.egress_rules
+    content {
+      description = egress.value.description
+      from_port   = egress.value.from_port
+      to_port     = egress.value.to_port
+      protocol    = egress.value.protocol
+      cidr_blocks = egress.value.cidr_blocks
+    }
+  }
 }

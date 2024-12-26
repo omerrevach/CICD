@@ -1,0 +1,4 @@
+this will create an image so i can see all of the things each root module setup to understand the structure better
+
+terraform graph > graph.dot
+dot -Tpng graph.dot -o graph.png
