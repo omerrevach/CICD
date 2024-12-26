@@ -10,7 +10,7 @@ This project implements a comprehensive Infrastructure as Code (IaC) solution us
 
 - Custom AMI with pre-configured Jenkins controller and dynamic node agent
 - Deployed in a private subnet for enhanced security
-- Connected to an Application Load Balancer (ALB) for traffic distribution
+- Connected to an ALB 
 - Easily adaptable to new VPCs by changing the subnet ID
 
 ### 2. EKS Cluster
@@ -18,15 +18,13 @@ This project implements a comprehensive Infrastructure as Code (IaC) solution us
 - Kubernetes cluster set up using Terraform
 - Ingress Nginx Controller for managing incoming traffic
 - ArgoCD integration for GitOps-based deployments
-- Accessible via HTTPS:
-  - ArgoCD: https://argocd.stockpnl.com
-  - Main Application: https://stockpnl.com
+- Accessible via HTTPS
 
 ### 3. EC2 Instance with Network Load Balancer
 
 - EC2 instance with restricted inbound traffic (only from IP 91.231.246.50)
-- Assigned an Elastic Public IP
-- Connected to a Network Load Balancer for traffic distribution
+- Assigned an Elastic IP
+- Connected to a NLB
 
 ## Infrastructure Design
 
@@ -41,54 +39,71 @@ This project implements a comprehensive Infrastructure as Code (IaC) solution us
 - HTTPS implementation with valid SSL certificates
 - EKS cluster with proper IAM roles and policies
 
-## Deployment and Access
-
-- Jenkins accessible through ALB
-- ArgoCD and main application accessible via custom domains with HTTPS
-- EC2 instance accessible only from specified IP
-
-## Repository Structure
-
-The project is organized in the following structure:
-
-.
-├── modules/
-│ ├── ec2/
-│ ├── eks/
-│ ├── jenkins/
-│ └── networking/
-├── environments/
-│ ├── dev/
-│ └── prod/
-├── scripts/
-├── .gitignore
-├── README.md
-└── main.tf
-
-text
+# Infrastructure Deployment Guide
 
 ## Getting Started
 
-1. Clone the repository:
+### 1. Clone the Repository
 
-git clone https://github.com/omerrevach/bank-leumi.git
+Clone the project repository only last commit:
 
-text
+```
+git clone --depth 1 https://github.com/omerrevach/bank-leumi.git
+cd bank-leumi
+```
 
-2. Navigate to the desired environment directory:
+### 2. Set Up Jenkins with ALB
 
-cd bank-leumi/environments/dev
+Navigate to tf/jenkins_alb_root
 
-text
-
-3. Initialize Terraform:
-
+Initialize and apply Terraform configuration:
+```
 terraform init
-
-text
-
-4. Apply the Terraform configuration:
-
+terraform plan
 terraform apply
+```
 
-text
+#### Jenkins Post-Configuration
+
+1. Open Jenkins UI
+2. Manage Jenkins -> Configure System
+   - Update proxy settings with ALB DNS
+
+3. Install Required Plugins:
+   - Amazon EC2
+   - Docker
+   - Docker Pipeline
+   - SSH Agent
+
+4. Configure Dynamic Node Agent
+   - Manage Jenkins -> Cloud
+   - Update subnet ID for the dynamic node agent
+
+### 3. Set Up EKS Cluster
+
+Navigate to tf/eks_setup_root:
+
+Initialize and apply Terraform configuration:
+```
+terraform init
+terraform plan
+terraform apply
+```
+
+### 4. Deploy Nginx Ingress and ArgoCD
+
+go to the helm directory
+
+````
+./setup-alb-argocd.sh
+```
+
+### 5. EC2 with Network Load Balancer
+
+> **Note:** This step uses existing VPC details from S3 remote Terraform state
+
+- Retrieve VPC details from S3 bucket
+- Configure NLB and EC2 instance
+- Restrict traffic to IP 91.231.246.50
+- Assign Elastic Public IP
+- Connect EC2 to Network Load Balancer
