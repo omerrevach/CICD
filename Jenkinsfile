@@ -70,7 +70,7 @@ pipeline {
             steps {
                 script {
                     sh 'docker rmi ${registry}:${env.BUILD_NUMBER} || true'
-                }//
+                }
             }
         }
     }
