@@ -1,7 +1,7 @@
 pipeline { 
     agent {
         docker {
-            label 'slave'
+            label 'slave-node'
             image "rebachi/bank-leumi:agent"
             alwaysPull true
         }
