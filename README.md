@@ -47,48 +47,86 @@ This project implements a comprehensive Infrastructure as Code (IaC) solution us
 - ArgoCD and main application accessible via custom domains with HTTPS
 - EC2 instance accessible only from specified IP
 
-## Repository Structure
-
-The project is organized in the following structure:
-
-.
-├── modules/
-│ ├── ec2/
-│ ├── eks/
-│ ├── jenkins/
-│ └── networking/
-├── environments/
-│ ├── dev/
-│ └── prod/
-├── scripts/
-├── .gitignore
-├── README.md
-└── main.tf
-
-text
+# Infrastructure Deployment Guide
 
 ## Getting Started
 
-1. Clone the repository:
+### 1. Clone the Repository
+
+Clone the project repository:
 
 git clone https://github.com/omerrevach/bank-leumi.git
+cd bank-leumi
 
 text
 
-2. Navigate to the desired environment directory:
+### 2. Set Up Jenkins with ALB
 
-cd bank-leumi/environments/dev
+Navigate to the Jenkins ALB configuration directory:
+
+cd tf/jenkins_alb_root
 
 text
 
-3. Initialize Terraform:
+Initialize and apply Terraform configuration:
 
 terraform init
-
-text
-
-4. Apply the Terraform configuration:
-
+terraform plan
 terraform apply
 
 text
+
+#### Jenkins Post-Configuration
+
+1. Open Jenkins UI
+2. Manage Jenkins -> Configure System
+   - Update proxy settings with ALB DNS
+
+3. Install Required Plugins:
+   - Amazon EC2
+   - Docker
+   - Docker Pipeline
+   - SSH Agent
+
+4. Configure Dynamic Node Agent
+   - Manage Jenkins -> Cloud
+   - Update subnet ID for the dynamic node agent
+
+### 3. Set Up EKS Cluster
+
+Navigate to EKS setup directory:
+
+cd ../../tf/eks_setup_root
+
+text
+
+Initialize and apply Terraform configuration:
+
+terraform init
+terraform plan
+terraform apply
+
+text
+
+### 4. Deploy Nginx Ingress and ArgoCD
+
+Deploy Nginx Ingress Controller and ArgoCD:
+
+cd ../../helm
+./setup-alb-argocd.sh
+
+text
+
+#### Access Points
+- ArgoCD: https://argocd.stockpnl.com
+- Application: https://stockpnl.com
+
+### 5. EC2 with Network Load Balancer
+
+> **Note:** This step uses existing VPC details from S3 remote Terraform state
+
+- Retrieve VPC details from S3 bucket
+- Configure NLB and EC2 instance
+- Restrict traffic to IP 91.231.246.50
+- Assign Elastic Public IP
+- Connect EC2 to Network Load Balancer
