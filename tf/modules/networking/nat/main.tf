@@ -15,7 +15,6 @@ data "aws_ami" "amazon_linux_2" {
 
 resource "aws_security_group" "nat" {
   name        = "${var.name}-nat-sg"
-  description = "Allow NAT Instance to forward traffic"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -50,6 +49,7 @@ resource "aws_instance" "ec2_instance" {
   subnet_id              = var.public_subnet_id
   vpc_security_group_ids = [aws_security_group.nat.id]
   source_dest_check      = false
+  key_name               = "omer_key"
 
   user_data = <<-EOF
     #!/bin/bash
@@ -69,6 +69,12 @@ resource "aws_instance" "ec2_instance" {
     sudo /sbin/iptables -t nat -A POSTROUTING -o $iface -j MASQUERADE
     sudo /sbin/iptables -F FORWARD
     sudo service iptables save
+
+    # Enable SSH for Bastion functionality
+    sudo yum update -y
+    sudo yum install -y openssh-server
+    sudo systemctl enable sshd
+    sudo systemctl start sshd
   EOF
 
   tags = {

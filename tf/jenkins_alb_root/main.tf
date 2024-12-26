@@ -42,7 +42,7 @@ module "ec2" {
   vpc_id                  = module.vpc.vpc_id
   subnet_id               = module.subnets.private_subnets[0]
   instance_type           = "t3.small"
-  ami                     = "ami-06d84abc599644ee1"
+  ami                     = "ami-05a860b39d42d1bb5"
   security_group_name     = "jenkins-sg"
   ingress_from_port       = 8080
   ingress_to_port         = 8080

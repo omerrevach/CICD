@@ -50,20 +50,3 @@ module "node_groups" {
   cluster_name       = module.eks.cluster_name
   private_subnet_ids = module.subnets.private_subnets
 }
-
-module "argocd" {
-  source           = "../modules/eks_cluster/argocd"
-  cluster_name     = module.eks.cluster_name
-  argocd_namespace = "argocd"
-  argocd_hostname  = "argocdproject.duckdns.com" # Provide the required hostname
-
-  depends_on = [module.node_groups]
-}
-
-data "aws_eks_cluster" "eks" {
-  name = module.eks.cluster_name
-}
-
-data "aws_eks_cluster_auth" "eks" {
-  name = module.eks.cluster_name
-}
