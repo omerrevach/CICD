@@ -1,130 +1,94 @@
-# Terraform Setup for Jenkins
+# Infrastructure as Code for Jenkins, EKS, and EC2 Deployment
 
-## **Project Title**
+## Project Overview
 
-CI/CD Project Bank Leumi
+This project implements a comprehensive Infrastructure as Code (IaC) solution using Terraform to set up and manage various AWS services including Jenkins, EKS (Elastic Kubernetes Service), and EC2 instances. The infrastructure is designed with security, scalability, and ease of management in mind.
 
-## **Introduction**
+## Key Components
 
-This project sets up with terraform the jenkins controller in a private subnet connected to an ALB for the ui.
-Another terraform for the eks sets up the eks cluster.
-in the cluster i have a script that sets up argocd and an alb ingress controller and connectes them together for use and i have a dns in route53 that lets me connect to argocd and to the pods in browser through https with cname for each
+### 1. Jenkins Controller
 
-## Features
+- Custom AMI with pre-configured Jenkins controller and dynamic node agent
+- Deployed in a private subnet for enhanced security
+- Connected to an Application Load Balancer (ALB) for traffic distribution
+- Easily adaptable to new VPCs by changing the subnet ID
 
-- **Jenkins**: Deployed as an EC2 instance in a private subnet for security.
-- **ALB**: Provides access to Jenkins from outside the private subnet.
-- **Terraform Modules**: Modularized infrastructure as code for easy management and scaling and dynamic options with ec2 and nlb/alb.
+### 2. EKS Cluster
 
-## Deployment Steps
+- Kubernetes cluster set up using Terraform
+- Ingress Nginx Controller for managing incoming traffic
+- ArgoCD integration for GitOps-based deployments
+- Accessible via HTTPS:
+  - ArgoCD: https://argocd.stockpnl.com
+  - Main Application: https://stockpnl.com
 
-1. **Clone the Repository**
-   Ensure you have the Terraform files ready in the `tf` directory.
+### 3. EC2 Instance with Network Load Balancer
 
-2. **Configure AWS Access**
-   Set up your AWS credentials in your environment or use an IAM role.
+- EC2 instance with restricted inbound traffic (only from IP 91.231.246.50)
+- Assigned an Elastic Public IP
+- Connected to a Network Load Balancer for traffic distribution
 
-3. **Apply the Terraform Configuration**
-   - Navigate to the Terraform directory:
+## Infrastructure Design
 
-     ```bash
-     cd tf
-     ```
+- Modular Terraform structure for reusability and maintainability
+- Secure network design with public and private subnets
+- Use of AWS managed services for reduced operational overhead
 
-   - Initialize Terraform:
+## Security Features
 
-     ```bash
-     terraform init
-     ```
+- Jenkins controller in a private subnet
+- Restricted EC2 access
+- HTTPS implementation with valid SSL certificates
+- EKS cluster with proper IAM roles and policies
 
-   - Apply the configuration:
+## Deployment and Access
 
-     ```bash
-     terraform apply
-     ```
+- Jenkins accessible through ALB
+- ArgoCD and main application accessible via custom domains with HTTPS
+- EC2 instance accessible only from specified IP
 
-4. **Access Jenkins**
-   - Use the ALB DNS name to access Jenkins in your browser.
+## Repository Structure
 
----
+The project is organized in the following structure:
 
-# Hello World App with Helm Deployment
+.
+├── modules/
+│ ├── ec2/
+│ ├── eks/
+│ ├── jenkins/
+│ └── networking/
+├── environments/
+│ ├── dev/
+│ └── prod/
+├── scripts/
+├── .gitignore
+├── README.md
+└── main.tf
 
-## Overview
+text
 
-The Python app is containerized with Docker and deployed to a Kubernetes cluster using Helm. It is designed to be simple and scalable.
+## Getting Started
 
-## Prerequisites
+1. Clone the repository:
 
-Before starting, make sure you have the following tools installed:
+git clone https://github.com/omerrevach/bank-leumi.git
 
-- [Docker](https://www.docker.com/)
-- [Kubernetes](https://kubernetes.io/)
-- [Helm](https://helm.sh/)
+text
 
-## Steps to Deploy the App
+2. Navigate to the desired environment directory:
 
-1. **Build and Push the Docker Image**
-   - Build the Docker image:
+cd bank-leumi/environments/dev
 
-     ```bash
-     docker build -t your-dockerhub-username/hello-world-app .
-     ```
+text
 
-   - Push the image to Docker Hub (or any registry):
+3. Initialize Terraform:
 
-     ```bash
-     docker push your-dockerhub-username/hello-world-app
-     ```
+terraform init
 
-2. **Deploy with Helm**
-   - Create a Helm chart (if not already created):
+text
 
-     ```bash
-     helm create hello-world
-     ```
+4. Apply the Terraform configuration:
 
-   - Update the `values.yaml` in the Helm chart with your Docker image details:
+terraform apply
 
-     ```yaml
-     image:
-       repository: your-dockerhub-username/hello-world-app
-       tag: latest
-     ```
-
-   - Install the Helm chart:
-
-     ```bash
-     helm install hello-world ./hello-world
-     ```
-
-3. **Access the Application**
-   - Check the service to get the external IP:
-
-     ```bash
-     kubectl get svc
-     ```
-
-   - Open the application in your browser using the external IP.
-
-4. **Clean Up**
-   - To remove the deployment:
-
-     ```bash
-     helm uninstall hello-world
-     ```
-
----
-
-# Tools Used
-
-- **Python & Flask**: For the Hello World app.
-- **Docker**: For containerizing the application.
-- **Kubernetes & Helm**: For deploying the app.
-- **Terraform**: For provisioning the infrastructure (Jenkins, EC2, ALB, VPC, Subnets).
-
----
-
-## Contact
-
-For questions or issues, feel free to open an issue in this repository.
+text

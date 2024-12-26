@@ -21,7 +21,10 @@ env/
 
 # DB
 instance/
+
+
 .terraform/
 terraform
-*.tfstate
 .terraform.lock.hcl
+*.tfstate
+*.tfstate.*
