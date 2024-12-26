@@ -7,7 +7,7 @@ pipeline {
         }
     } 
 
-    enviorment {
+    environment {
         registry = "rebachi/bank-leumi"
         registryCredential = 'docker-hub-id-new'
     }
@@ -52,12 +52,24 @@ pipeline {
             }
         }
 
-        stage("Trigger CD JOb") {
+        stage("Trigger CD Job") {
             steps {
-                build job: 'CD',
-                    parameters: [
-                        string(name: 'DOCKER_IMAGE', value: app.imageName())
-                    ]
+                script {
+                    build job: 'CD',
+                        parameters: [
+                            string(name: 'DOCKER_IMAGE', value: "${registry}:${env.BUILD_NUMBER}")
+                        ]
+                }
+            }
+        }
+    }
+
+    post {
+        cleanup {
+            steps {
+                script {
+                    sh 'docker rmi ${registry}:${env.BUILD_NUMBER} || true'
+                }
             }
         }
     }
