@@ -15,7 +15,6 @@ data "aws_ami" "amazon_linux_2" {
 
 resource "aws_security_group" "nat" {
   name        = "${var.name}-nat-sg"
-  description = "Allow NAT Instance to forward traffic"
   vpc_id      = var.vpc_id
 
   ingress {

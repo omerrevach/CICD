@@ -38,9 +38,10 @@ resource "aws_lb_target_group" "target_group" {
   vpc_id   = var.vpc_id
 
   health_check {
-    path     = "/health"
     port     = var.health_check_port
     protocol = var.protocol
+
+    path = var.protocol == "HTTP" || var.protocol == "HTTPS" ? "/health" : null
   }
 }
 
