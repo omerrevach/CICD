@@ -55,9 +55,7 @@ pipeline {
             steps {
                 dir('app') {
                     script {
-                        sh '''
-                            docker build -t ${registry}:${env.BUILD_NUMBER} .
-                        '''
+                        app = docker.build("${registry}:${env.BUILD_NUMBER}", ".")
                     }
                 }
             }
@@ -68,7 +66,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', registryCredential) {
-                        sh "docker push ${registry}:${env.BUILD_NUMBER}"
+                        app.push("${env.BUILD_NUMBER}")
                     }
                 }
             }
