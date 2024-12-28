@@ -24,12 +24,14 @@ pipeline {
             }
         }
 
-        stage('Parallel Stage For Static Analysis Tests') {
+        stage('Parallel Stages For Static Analysis Tests') {
             parallel {
                 stage("Pylint") {
                     steps {
                         dir('bank-leumi') {
-                            sh 'pylint --output-format=parseable --fail-under=0 app/app.py'
+                            sh '''
+                                pylint --output-format=parseable --fail-under=0 app.py
+                            '''
                         }
                     }
                 }
@@ -37,12 +39,15 @@ pipeline {
                 stage("Bandit Scan") {
                     steps {
                         dir('bank-leumi') {
-                            sh 'bandit -r app --severity-level high'
+                            sh '''
+                                bandit -r . --severity-level high
+                            '''
                         }
                     }
                 }
             }
         }
+
 
         stage("Docker Build") {
             steps {
