@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: rebachi/bank-leumi
   pullPolicy: Always
-  tag: latest
+  tag: ""
 
 service:
   type: ClusterIP
