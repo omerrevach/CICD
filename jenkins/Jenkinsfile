@@ -17,7 +17,7 @@ pipeline {
         stage('Checkout scm') {
             steps {
                 sh 'rm -rf bank-leumi'
-                sh 'git clone https://github.com/omerrevach/bank-leumi.git'
+                checkout scm
             }
         }
 
