@@ -18,10 +18,13 @@ pipeline {
             steps {
                 sh 'rm -rf bank-leumi'
                 checkout scm
+                script {
+                    sh 'ls -R'
+                }
             }
         }
 
-        stage('Parallel Stages For Static Analysis Tests') {
+        stage('Parallel Stage For Static Analysis Tests') {
             parallel {
                 stage("Pylint") {
                     steps {
@@ -45,7 +48,7 @@ pipeline {
             steps {
                 dir('bank-leumi') {
                     script {
-                        app = docker.build("${registry}:${env.BUILD_NUMBER}", "./app")
+                        sh "docker build -t ${registry}:${env.BUILD_NUMBER} app"
                     }
                 }
             }
@@ -55,7 +58,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', registryCredential) {
-                        app.push("${env.BUILD_NUMBER}")
+                        sh "docker push ${registry}:${env.BUILD_NUMBER}"
                     }
                 }
             }
