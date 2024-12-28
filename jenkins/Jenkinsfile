@@ -53,13 +53,16 @@ pipeline {
 
         stage("Docker Build") {
             steps {
-                dir('bank-leumi') {
+                dir('app') {
                     script {
-                        sh "docker build -t ${registry}:${env.BUILD_NUMBER} app"
+                        sh '''
+                            docker build -t ${registry}:${env.BUILD_NUMBER} .
+                        '''
                     }
                 }
             }
         }
+
 
         stage("Docker Push") {
             steps {
