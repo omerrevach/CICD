@@ -28,8 +28,9 @@ pipeline {
             parallel {
                 stage("Pylint") {
                     steps {
-                        dir('bank-leumi') {
+                        dir('app') {
                             sh '''
+                                export PYTHONPATH=.
                                 pylint --output-format=parseable --fail-under=0 app.py
                             '''
                         }
@@ -38,7 +39,7 @@ pipeline {
 
                 stage("Bandit Scan") {
                     steps {
-                        dir('bank-leumi') {
+                        dir('app') {
                             sh '''
                                 bandit -r . --severity-level high
                             '''
@@ -47,6 +48,7 @@ pipeline {
                 }
             }
         }
+
 
 
         stage("Docker Build") {
