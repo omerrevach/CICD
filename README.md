@@ -4,7 +4,7 @@
 
 This project automates the infrastructure provisioning and deployment processes for Bank Leumi using **Terraform**, **Jenkins**, and **GitLab**. The goal is to create a seamless CI/CD pipeline that integrates code changes from GitLab, triggers builds in Jenkins, and deploys applications to an AWS EKS cluster.
 
-<img src="bank-leumi.drawio.png">
+<img src="bank-leumi.drawio.svg">
 
 ## Infrastructure Automation
 
