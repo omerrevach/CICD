@@ -1,11 +1,3 @@
-terraform {
-  backend "s3" {
-    bucket         = "my-terraform-state-vpc"
-    key            = "eks/terraform.tfstate"
-    region         = "eu-north-1"
-  }
-}
-
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
