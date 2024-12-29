@@ -15,10 +15,15 @@ answer a:
 * i will make sure that the test ec2 has correct security groups port 53 for dns and that the checpoint fw ec2 is correct with the security group as well
 * try nslookup to check if it works correctly
 * i will check the nat gateway in the egress vpc since it passes there to get outside
+* make sure that the test spoke vpc has the dns resolution enabled
 
 b.    The EC2 test machine resolves DNS addresses but fails to communicate with the internet. What could be the source of the issue?
-i wil check the security group of the ec2 test to see if it allows https traffic outside
-check the transit gateway if it is configured correctly
+
+answer b:
+* i wil check the security group of the ec2 test to see if it allows https traffic outside
+* check the transit gateway if it is configured correctly
+* If the nat gateway in vpc egress is functioning correrctly
+* make sure the route from the tgw to nat gateway is correct ti send external traffic
 
 c.    The EC2 test machine has Docker Engine installed, and its repository is in a VPC (ALM) on a Nexus repository machine. Given the following errors, what would you check?
         Error 1: pull access denied
@@ -39,10 +44,11 @@ c.Error 2:
 c.Error 3:
 * i will first check if it is running with systemctl status docker to check and make sure i also enable it
 * docker might not have correct permissions
-* didnt download docker correctly like docker.io instead of the logn term supported download from the documentation
+* didnt download docker correctly like docker.io instead of the long term supported download from the documentation
 * not enough resources on the ec2
 * check that another service isnt causing a conflict
 * check the logs
+* check if the user that is executing docker commands is in the docker group 
 
 question 3:
 You are exposing a service to the internet based on a DNS record pointing to the EC2 test machine. When accessed externally, the machine's public address is returned, but the service cannot be accessed over HTTPS. What would you examine in the flow?
