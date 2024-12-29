@@ -1,3 +1,7 @@
+variable "name" {
+  type        = string
+}
+
 variable "vpc_id" {
   type        = string
 }
@@ -6,43 +10,39 @@ variable "public_subnet_ids" {
   type        = list(string)
 }
 
-variable "name" {
+variable "load_balancer_type" {
+  description = "(application or network)"
   type        = string
 }
 
-variable "load_balancer_type" {
-  description = "load balancer (application or network)"
+variable "protocol" {
+  description = "protocoltarget groups and listener (HTTP or TCP)"
   type        = string
 }
 
 variable "ingress_from_port" {
-  description = "starting port for ingress traffic"
   type        = number
 }
 
 variable "ingress_to_port" {
-  description = "endport for ingress traffic"
   type        = number
 }
 
-variable "target_group_port" {
-  type        = number
+variable "target_groups" {
+  type = map(object({
+    port              = number
+    protocol          = string
+    health_check_path = string
+    health_check_port = number
+    instance_id       = string
+    target_group_port = number
+  }))
 }
 
-variable "protocol" {
-  description = "protocol for the load balancer(HTTP or TCP)"
-  type        = string
-}
-
-variable "health_check_port" {
-  description = "port for the health check"
-  type        = number
-}
-
-variable "listener_port" {
-  type        = number
-}
-
-variable "instance_id" {
-  type        = string
+variable "listeners" {
+  type = map(object({
+    port              = number
+    protocol          = string
+    target_group_key  = string
+  }))
 }

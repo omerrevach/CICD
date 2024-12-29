@@ -1,0 +1,70 @@
+to undersat what is going on in the picture:
+the egress vpc is to filter traffic from inside the vpc to the internet.
+
+the checkpoint firewall in inspection vpc is to add wsecurity by inspecting traffic dns and https
+
+
+
+question 2:
+
+a.    An EC2 test machine cannot resolve DNS for internet addresses. What points of failure would you examine?
+
+answer a:
+* i will check that the route tables in the test spoke vpc are all configured corrctly
+* i would check that the transit gateway is forwarding the dns correctly
+* i will make sure that the test ec2 has correct security groups port 53 for dns and that the checpoint fw ec2 is correct with the security group as well
+* try nslookup to check if it works correctly
+* i will check the nat gateway in the egress vpc since it passes there to get outside
+
+b.    The EC2 test machine resolves DNS addresses but fails to communicate with the internet. What could be the source of the issue?
+i wil check the security group of the ec2 test to see if it allows https traffic outside
+check the transit gateway if it is configured correctly
+
+c.    The EC2 test machine has Docker Engine installed, and its repository is in a VPC (ALM) on a Nexus repository machine. Given the following errors, what would you check?
+        Error 1: pull access denied
+        Error 2: container pull time out
+        Error 3: docker daemon is not running
+answer:
+c.Error 1: 
+* i will check that the ec2 test has correct credentials for nexus
+* i will check the nexus repo permissions that i have pull permissions
+* make sure to check my spelling when i type the image and to make sure im pulling the right one
+
+c.Error 2:
+* i will check that test ec2 has connectivity and can reach to nexus ec2 and on the 443 port
+* check security groups to allow outboand to nexus edc2
+* maybe the nexus is down or is not functioning well
+* if the test ec2 has almost no resources then he cannot pull
+
+c.Error 3:
+* i will first check if it is running with systemctl status docker to check and make sure i also enable it
+* docker might not have correct permissions
+* didnt download docker correctly like docker.io instead of the logn term supported download from the documentation
+* not enough resources on the ec2
+* check that another service isnt causing a conflict
+* check the logs
+
+question 3:
+You are exposing a service to the internet based on a DNS record pointing to the EC2 test machine. When accessed externally, the machine's public address is returned, but the service cannot be accessed over HTTPS. What would you examine in the flow?
+
+answer:
+* open inbound traffic for test ec2 on port 443 and outbound
+* network nacl can allow inbound on port 443 as well and that cidrs are correct for specific ip's
+* the checkpoint firewall or the nfw might be blocking https traffic or blocking specific ip's
+* i will check ssl certificate if its not expired
+
+question 4: 
+
+When attempting to run telnet from the EC2 test machine, an error indicates that the tool is missing. How would you install it on Amazon Linux 2? What could cause a failure in installing it from the repository, and what command would you use to resolve it?
+
+answer:
+* install telnet =  sudo yum -y install telnet
+* route tables might not be correct for accising the internet or nfw doesnt allow it
+
+
+to fix:
+* check and install missing dependencies
+* text internet connectivity ping 8.8.8.8 or ping amazon.com
+* run commands : sudo yum clean all and sudo yum update -y -> clears cache and downloads latest data for packages and fixes outdayted configs or coruppted cache
+* find if there are missing repos : sudo yum repolist all -> if there are missing then add
+* nslookup to check if its a problem with the dns or security groups

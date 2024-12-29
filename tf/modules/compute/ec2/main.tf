@@ -33,7 +33,6 @@ resource "aws_instance" "instance" {
   }
 }
 
-# Uncomment if Elastic IP is required
 # resource "aws_eip" "eip" {
 #   domain = "vpc"
 #   depends_on = [aws_instance.instance]

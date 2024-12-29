@@ -1,0 +1,73 @@
+pipeline {
+    agent {
+        docker {
+            label 'agent'
+            image 'rebachi/pipeline-slave:latest'
+            args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock'
+            alwaysPull true
+        }
+    }
+
+    environment {
+        CLUSTER_NAME = "eks"
+        REGION = "eu-north-1"
+    }
+
+    parameters {
+        string(name: 'DOCKER_IMAGE', description: 'Docker image to deploy')
+    }
+
+    stages {
+        stage("Checkout SCM") {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage("Setup ArgoCD and Nginx Ingress Controller") {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh '''
+                        aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+
+                        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.3.0/deploy/static/provider/cloud/deploy.yaml
+
+                        kubectl create namespace argocd || true
+                        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+                        kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type='json' -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
+
+                        echo "Waiting for ArgoCD pods to be ready..."
+                        kubectl -n argocd wait --for=condition=ready pod --all --timeout=300s
+                        echo "ArgoCD setup is complete."
+                    '''
+                }
+            }
+        }
+
+        stage('Update Deployment in ArgoCD Repo') {
+            steps {
+                // i used the cut so it only gives me the build number and not with the image
+                sh """
+                    yq -e -i '.image.tag = "$(echo "${params.DOCKER_IMAGE}" | cut -d ':' -f 2)"' helm/values.yaml
+                """
+
+
+                withCredentials([usernamePassword(credentialsId: 'gitlab_username_password', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh """
+                        sh "git config --global --add safe.directory '*'"
+                        git config --global user.name "Administrator"
+                        git config --global user.email "gitlab_admin_98fe55@example.com"
+                        git add helm/values.yaml
+                        git commit -m "Update deployment with image"
+                        git remote set-url origin http://${GIT_USERNAME}:${GIT_PASSWORD}@ALBDNS/bank-leumi/cd.git
+                        git push origin HEAD:main
+                    """
+                }
+            }
+        }
+    }
+}
