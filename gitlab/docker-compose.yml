@@ -1,0 +1,16 @@
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: always
+    hostname: 'shlomi'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://ALBDNS'
+    ports:
+      - '80:80'
+    volumes:
+      - '/srv/gitlab/config:/etc/gitlab'
+      - '/srv/gitlab/logs:/var/log/gitlab'
+      - '/srv/gitlab/data:/var/opt/gitlab'
+    shm_size: '256m'

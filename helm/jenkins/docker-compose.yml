@@ -1,0 +1,11 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    user: root
+    volumes:
+      - /home/ubuntu/jenkins_home:/var/jenkins_home
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    restart: always
+    container_name: jenkins_container

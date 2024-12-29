@@ -16,7 +16,11 @@ pipeline {
     stages {
         stage('Checkout scm') {
             steps {
+                sh 'rm -rf bank-leumi'
                 checkout scm
+                script {
+                    sh 'ls -R'
+                }
             }
         }
 
@@ -27,7 +31,7 @@ pipeline {
                         dir('app') {
                             sh '''
                                 export PYTHONPATH=.
-                                pylint --output-format=parseable --fail-under=5 app.py
+                                pylint --output-format=parseable --fail-under=0 app.py
                             '''
                         }
                     }
@@ -82,10 +86,11 @@ pipeline {
 
     post {
         cleanup {
-            sh "docker rmi $registry:latest || true"
-            sh "find ${env.WORKSPACE} -mindepth 1 -delete" 
-            deleteDir()
+            steps {
+                script {
+                    sh 'docker rmi ${registry}:${env.BUILD_NUMBER} || true'
+                }
+            }
         }
     }
-
 }

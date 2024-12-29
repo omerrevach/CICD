@@ -3,27 +3,9 @@ replicaCount: 1
 image:
   repository: rebachi/bank-leumi
   pullPolicy: Always
-  tag: ""
+  tag: "45"
 
 service:
   type: ClusterIP
   port: 443
   targetPort: 5000
-
-ingress:
-  app:
-    enabled: true
-    hosts:
-      - stockpnl.com
-    tls:
-      - secretName: app-tls-secret
-        hosts:
-          - stockpnl.com
-  argocd:
-    enabled: true
-    hosts:
-      - argocd.stockpnl.com
-    tls:
-      - secretName: argocd-tls-secret
-        hosts:
-          - argocd.stockpnl.com

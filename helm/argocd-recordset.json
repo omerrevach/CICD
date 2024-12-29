@@ -1,0 +1,18 @@
+{
+  "Changes": [
+      {
+          "Action": "UPSERT",
+          "ResourceRecordSet": {
+              "Name": "argocd.stockpnl.com.",
+              "Type": "A",
+              "AliasTarget": {
+                  "HostedZoneId": "Z23TAZ6LKFMNIO",
+                  "DNSName": "a53baa3b293cb4ce88852b952099694b-788020429.eu-north-1.elb.amazonaws.com",
+                  "EvaluateTargetHealth": false
+              }
+          }
+      }
+  ]
+}
+
+# aws route53 change-resource-record-sets --hosted-zone-id Z022564630P941WV72XMM --change-batch file://argocd-recordset.json

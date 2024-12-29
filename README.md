@@ -1,109 +1,73 @@
-# Infrastructure as Code for Jenkins, EKS, and EC2 Deployment
+# Bank Leumi CI/CD Project
 
-## Project Overview
+## Overview
 
-This project implements a comprehensive Infrastructure as Code (IaC) solution using Terraform to set up and manage various AWS services including Jenkins, EKS (Elastic Kubernetes Service), and EC2 instances. The infrastructure is designed with security, scalability, and ease of management in mind.
+This project automates the infrastructure provisioning and deployment processes for Bank Leumi using **Terraform**, **Jenkins**, and **GitLab**. The goal is to create a seamless CI/CD pipeline that integrates code changes from GitLab, triggers builds in Jenkins, and deploys applications to an AWS EKS cluster.
 
-## Key Components
+## Infrastructure Automation
 
-### 1. Jenkins Controller
+### Terraform Setup
 
-- Custom AMI with pre-configured Jenkins controller and dynamic node agent
-- Deployed in a private subnet for enhanced security
-- Connected to an ALB 
-- Easily adaptable to new VPCs by changing the subnet ID
+We utilize Terraform to automate the creation of the following AWS resources:
 
-### 2. EKS Cluster
+- **VPC**: A Virtual Private Cloud to host our resources securely.
+- **Subnets**: Private subnets for Jenkins and GitLab, ensuring they are not exposed directly to the internet.
+- **Application Load Balancer (ALB)**: To manage incoming traffic to our services.
+- **EKS Cluster**: An Elastic Kubernetes Service cluster for deploying containerized applications.
+- **Network Load Balancer (NLB)**: For handling high-throughput traffic.
+- **Test EC2 Instances**: To validate our infrastructure setup.
 
-- Kubernetes cluster set up using Terraform
-- Ingress Nginx Controller for managing incoming traffic
-- ArgoCD integration for GitOps-based deployments
-- Accessible via HTTPS
+The Terraform configuration is modularized for reusability and dynamic configuration, allowing easy adjustments to parameters like instance types, regions, and scaling options.
 
-### 3. EC2 Instance with Network Load Balancer
+## CI/CD Pipeline
 
-- EC2 instance with restricted inbound traffic (only from IP 91.231.246.50)
-- Assigned an Elastic IP
-- Connected to a NLB
+### Jenkins Integration
 
-## Infrastructure Design
+The CI/CD pipeline is implemented in Jenkins, which is triggered by changes in the GitLab repository. The pipeline consists of several stages:
 
-- Modular Terraform structure for reusability and maintainability
-- Secure network design with public and private subnets
-- Use of AWS managed services for reduced operational overhead
+1. **Checkout SCM**: Pulls the latest code from the GitLab repository.
+2. **Debug ArgoCD CLI**: Checks if the ArgoCD CLI is installed and accessible.
+3. **Setup ArgoCD and NGINX Ingress Controller**:
+   - Updates kubeconfig for EKS.
+   - Deploys the NGINX Ingress Controller.
+   - Installs ArgoCD in a dedicated namespace.
+   - Configures SSL passthrough for secure connections.
+4. **Install ArgoCD CLI**: Downloads and installs the ArgoCD command-line interface.
+5. **Login to ArgoCD and Create Application**:
+   - Retrieves the initial admin password from ArgoCD secrets.
+   - Logs into ArgoCD using the CLI.
+   - Creates an application in ArgoCD that points to the GitLab repository for deployment.
+6. **Update Deployment in ArgoCD Repo**:
+   - Updates the `values.yaml` file with the current Docker image tag based on the latest build.
+   - Commits and pushes changes back to the GitLab repository.
 
-## Security Features
+### Continuous Integration
 
-- Jenkins controller in a private subnet
-- Restricted EC2 access
-- HTTPS implementation with valid SSL certificates
-- EKS cluster with proper IAM roles and policies
+When a change is made in GitLab, Jenkins automatically triggers a CI job that performs static analysis on the code using tools like Bandit and Pylint. If all checks pass, Jenkins builds a Docker image and pushes it to Docker Hub.
 
-# Infrastructure Deployment Guide
+### Continuous Deployment
 
-## Getting Started
+After building the Docker image, Jenkins triggers another job that handles:
 
-### 1. Clone the Repository
+- Setting up the NGINX Ingress Controller if not already deployed.
+- Deploying ArgoCD for managing application deployments in Kubernetes.
+- Synchronizing application states in Kubernetes using ArgoCD.
 
-Clone the project repository only last commit:
+## DNS Configuration with Route 53
 
-```
-git clone --depth 1 https://github.com/omerrevach/bank-leumi.git
-cd bank-leumi
-```
+To enable secure access to ArgoCD and deployed applications, we configure DNS records using AWS Route 53:
 
-### 2. Set Up Jenkins with ALB
+- An A record is created for `argocd.stockpnl.com`, pointing to the NGINX Ingress Controller's DNS name, allowing HTTPS access.
 
-Navigate to tf/jenkins_alb_root
+## Conclusion
 
-Initialize and apply Terraform configuration:
-```
-terraform init
-terraform plan
-terraform apply
-```
+This project demonstrates a complete CI/CD workflow from infrastructure provisioning to application deployment on AWS using modern DevOps practices. By leveraging Terraform for infrastructure as code, Jenkins for continuous integration, and GitLab for version control, we achieve a streamlined process that enhances productivity and reliability.
 
-#### Jenkins Post-Configuration
+## Future Work
 
-1. Open Jenkins UI
-2. Manage Jenkins -> Configure System
-   - Update proxy settings with ALB DNS
+Future enhancements may include:
 
-3. Install Required Plugins:
-   - Amazon EC2
-   - Docker
-   - Docker Pipeline
-   - SSH Agent
+- Implementing additional monitoring and logging solutions.
+- Expanding automated tests within the CI pipeline.
+- Integrating additional services or microservices into the existing architecture.
 
-4. Configure Dynamic Node Agent
-   - Manage Jenkins -> Cloud
-   - Update subnet ID for the dynamic node agent
-
-### 3. Set Up EKS Cluster
-
-Navigate to tf/eks_setup_root:
-
-Initialize and apply Terraform configuration:
-```
-terraform init
-terraform plan
-terraform apply
-```
-
-### 4. Deploy Nginx Ingress and ArgoCD
-
-go to the helm directory
-
-````
-./setup-alb-argocd.sh
-```
-
-### 5. EC2 with Network Load Balancer
-
-> **Note:** This step uses existing VPC details from S3 remote Terraform state
-
-- Retrieve VPC details from S3 bucket
-- Configure NLB and EC2 instance
-- Restrict traffic to IP 91.231.246.50
-- Assign Elastic Public IP
-- Connect EC2 to Network Load Balancer

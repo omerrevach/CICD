@@ -1,0 +1,99 @@
+pipeline {
+    agent {
+        docker {
+            label 'agent'
+            image "rebachi/bank-leumi:agent"
+            args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock'
+            alwaysPull true
+        }
+    }
+    environment {
+        CLUSTER_NAME = "eks"
+        REGION = "eu-north-1"
+    }
+
+    parameters {
+        string(name: 'DOCKER_IMAGE', description: 'Docker image to deploy')
+    }
+
+    stages {
+        stage("Checkout SCM") {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage("Setup ArgoCD and Nginx Ingress Controller") {
+            steps {
+                script {
+                    sh '''
+                        aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+
+                        # deploy the ingress-nginx
+                        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.3.0/deploy/static/provider/cloud/deploy.yaml
+
+                        kubectl create namespace argocd
+                        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+                        # enable ssl passthrough for ingress nginx so i can access through the dns
+                        kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type='json' -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
+
+                    '''
+                }
+            }
+        }
+
+        stage("Login to ArgoCD and Create Application") {
+            steps {
+                script {
+                    sh '''
+                        aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${REGION}
+
+                        # get password of argocd
+                        export ARGO_PWD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+
+                        # login to argoCD
+                        argocd login ${ARGOCD_SERVER} --username admin --password $ARGO_PWD --insecure
+
+                        # create app
+                        argocd app create app-spring-petclinic \
+                            --repo http://ALBDNS/leumi/leumi.git \
+                            --path app \
+                            --revision main \
+                            --dest-server https://kubernetes.default.svc \
+                            --dest-namespace helloworld \
+                            --directory-recurse \
+                            --sync-policy automated \
+                            --self-heal \
+                            --sync-option Prune=true \
+                            --sync-option CreateNamespace=true
+                    '''
+                }
+            }
+        }
+
+        stage('Update Deployment in ArgoCD Repo') {
+            steps {
+                script {
+                    sh "git config --global --add safe.directory '*'"
+
+                    sh """
+                        yq -e -i '.image.tag = env(params.DOCKER_IMAGE)' helm/values.yaml
+                    """
+
+                    withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        sh """
+                            git config --global user.name "Administrator"
+                            git config --global user.email "gitlab_admin_98fe55@example.com"
+                            git add deployment.yaml
+                            git commit -m "Update deployment with image"
+                           
+                            git remote set-url origin http://${GIT_USERNAME}:${GIT_PASSWORD}@ALBDNS/argocd-maifest/argocd-manifest.git
+                            git push origin HEAD:main
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
