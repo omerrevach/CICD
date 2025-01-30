@@ -1,4 +1,4 @@
-# Bank Leumi CI/CD Project
+# CI/CD Project
 
 ## Overview
 
